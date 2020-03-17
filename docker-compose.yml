@@ -1,0 +1,45 @@
+version: '3.7'
+services:
+  mongo:
+    image: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    networks:
+      mongo_net:
+        aliases:
+          - mongo
+  rabbitmq:
+    image: rabbitmq
+    networks:
+      rabbit_net:
+        aliases:
+          - rabbitmq
+  strbot_server:
+    build: .
+    networks:
+      - rabbit_net
+      - mongo_net
+    environment:
+      - LAUNCH_DELAY=30
+      - SERVICE=Game.Server
+      - MONGO_HOST=mongo
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      - mongo
+      - rabbitmq
+  strbot_telegram:
+    build: .
+    networks:
+      - rabbit_net
+    environment:
+      - LAUNCH_DELAY=30
+      - SERVICE=Telegram.Polling
+      - RABBITMQ_HOST=rabbitmq
+      - TELEGRAM_TOKEN=565604143:AAGfuzHPId8pBePgWINafeLY0DQwKbsvYHc
+    depends_on:
+      - strbot_server
+      - rabbitmq
+networks:
+  rabbit_net:
+  mongo_net:
